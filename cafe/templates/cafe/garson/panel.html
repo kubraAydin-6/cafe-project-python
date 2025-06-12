@@ -1,0 +1,341 @@
+{% extends 'cafe/base.html' %}
+
+{% block extra_css %}
+<style>
+.masa-card {
+    transition: all 0.3s ease;
+    cursor: pointer;
+}
+.masa-card:hover {
+    transform: translateY(-5px);
+}
+.siparis-card {
+    border-left: 4px solid #ddd;
+}
+.siparis-card.beklemede {
+    border-left-color: #dc3545;
+}
+.siparis-card.hazirlaniyor {
+    border-left-color: #ffc107;
+}
+.siparis-card.tamamlandi {
+    border-left-color: #198754;
+}
+.siparis-card.iptal {
+    border-left-color: #6c757d;
+}
+.masa-detay-panel {
+    position: fixed;
+    top: 0;
+    right: -400px;
+    width: 400px;
+    height: 100vh;
+    background: white;
+    box-shadow: -2px 0 5px rgba(0,0,0,0.1);
+    transition: right 0.3s ease;
+    z-index: 1040;
+    padding: 20px;
+    overflow-y: auto;
+}
+.masa-detay-panel.active {
+    right: 0;
+}
+.panel-overlay {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0,0,0,0.5);
+    z-index: 1030;
+}
+.panel-overlay.active {
+    display: block;
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="row mb-4">
+        <div class="col">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h2 class="mb-0">
+                        <i class="fas fa-user-tie me-2"></i>Garson Paneli
+                    </h2>
+                    <p class="text-muted">Masa ve sipariş yönetimi</p>
+                </div>
+                <a href="{% url 'garson_cikis' %}" class="btn btn-outline-danger">
+                    <i class="fas fa-sign-out-alt me-2"></i>Çıkış Yap
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Sol Taraf: Masalar -->
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-header bg-white">
+                    <h5 class="mb-0"><i class="fas fa-chair me-2"></i>Masalar</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row g-3">
+                        {% for masa in masalar %}
+                        <div class="col-6">
+                            <div class="card masa-card {% if masa.dolu %}bg-danger{% else %}bg-success{% endif %} text-white" 
+                                 {% if masa.dolu %}onclick="masaDetayGoster({{ masa.no }})"{% endif %}>
+                                <div class="card-body p-3">
+                                    <h5 class="mb-1">Masa {{ masa.no }}</h5>
+                                    <p class="mb-0 small">
+                                        {% if masa.dolu %}
+                                            <i class="fas fa-user me-1"></i>{{ masa.musteri }}
+                                            <br>
+                                            <small>{{ masa.sure }} önce</small>
+                                        {% else %}
+                                            <i class="fas fa-check me-1"></i>Boş
+                                        {% endif %}
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Orta: Aktif Siparişler -->
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-header bg-white">
+                    <h5 class="mb-0"><i class="fas fa-clipboard-list me-2"></i>Aktif Siparişler</h5>
+                </div>
+                <div class="card-body p-0">
+                    {% for siparis in siparisler %}
+                    <div class="siparis-card {{ siparis.durum }} p-3 border-bottom">
+                        <div class="d-flex justify-content-between align-items-start">
+                            <div>
+                                <h6 class="mb-1">Masa {{ siparis.masa_no }}</h6>
+                                <p class="text-muted mb-2 small">{{ siparis.olusturma_tarihi|timesince }} önce</p>
+                                <div class="mb-2">
+                                    {% for urun in siparis.siparis_urunleri.all %}
+                                    <span class="badge bg-light text-dark me-1">
+                                        {{ urun.urun.isim }} x{{ urun.adet }}
+                                    </span>
+                                    {% endfor %}
+                                </div>
+                            </div>
+                            <div class="d-flex gap-2">
+                                <select class="form-select form-select-sm durum-select" 
+                                        data-siparis-id="{{ siparis.id }}"
+                                        {% if siparis.durum == 'tamamlandi' or siparis.durum == 'iptal' %}disabled{% endif %}>
+                                    <option value="beklemede" {% if siparis.durum == 'beklemede' %}selected{% endif %}>Beklemede</option>
+                                    <option value="hazirlaniyor" {% if siparis.durum == 'hazirlaniyor' %}selected{% endif %}>Hazırlanıyor</option>
+                                    <option value="tamamlandi" {% if siparis.durum == 'tamamlandi' %}selected{% endif %}>Tamamlandı</option>
+                                    <option value="iptal" {% if siparis.durum == 'iptal' %}selected{% endif %}>İptal</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    {% empty %}
+                    <div class="text-center py-5">
+                        <i class="fas fa-clipboard-check fa-3x text-muted mb-3"></i>
+                        <p class="text-muted">Bekleyen sipariş yok</p>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Sağ Taraf: Masa Detayı -->
+        <div class="col-md-4">
+            <div class="card" id="masaDetayPanel">
+                <div class="card-header bg-white">
+                    <h5 class="mb-0"><i class="fas fa-info-circle me-2"></i>Masa Detayı</h5>
+                </div>
+                <div class="card-body">
+                    <div id="masaDetayIcerik">
+                        <div class="text-center py-5">
+                            <i class="fas fa-hand-point-left fa-3x text-muted mb-3"></i>
+                            <p class="text-muted">Detayları görüntülemek için bir masa seçin</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Masa Detay Template -->
+<template id="masaDetayTemplate">
+    <div class="d-flex align-items-center mb-4">
+        <div class="bg-primary bg-opacity-10 rounded-circle p-3 me-3">
+            <i class="fas fa-user text-primary"></i>
+        </div>
+        <div>
+            <h6 class="mb-1">[MUSTERI]</h6>
+            <p class="text-muted small mb-0">[SURE] önce</p>
+        </div>
+    </div>
+
+    <div id="siparislerAlani">
+        <!-- Siparişler buraya JavaScript ile eklenecek -->
+    </div>
+</template>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Masa verilerini JSON olarak al
+const masaVerileri = JSON.parse('{{ masalar_json|safe }}');
+
+document.addEventListener('DOMContentLoaded', function() {
+    // Sipariş durumu değiştirme
+    document.querySelectorAll('.durum-select').forEach(select => {
+        select.addEventListener('change', function() {
+            const siparisId = this.dataset.siparisId;
+            const yeniDurum = this.value;
+            
+            fetch('{% url "siparis_durumu_guncelle" 0 %}'.replace('0', siparisId), {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                    'X-CSRFToken': '{{ csrf_token }}'
+                },
+                body: `durum=${yeniDurum}`
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    window.location.reload();
+                } else {
+                    alert('Durum güncellenirken bir hata oluştu.');
+                }
+            });
+        });
+    });
+});
+
+function masaDetayGoster(masaNo) {
+    console.log('Masa detay göster çağrıldı:', masaNo);
+    
+    const masa = masaVerileri.find(m => m.no === masaNo);
+    console.log('Bulunan masa:', masa);
+    
+    if (!masa) {
+        console.error('Masa bulunamadı:', masaNo);
+        return;
+    }
+
+    const detayPanel = document.getElementById('masaDetayIcerik');
+    const template = document.getElementById('masaDetayTemplate');
+    const detayIcerik = template.content.cloneNode(true);
+
+    // Müşteri bilgilerini güncelle
+    detayIcerik.querySelector('h6').textContent = masa.musteri;
+    detayIcerik.querySelector('p').textContent = `${masa.sure} önce`;
+
+    // Siparişleri ekle
+    const siparislerAlani = detayIcerik.getElementById('siparislerAlani');
+    
+    if (masa.siparisler && masa.siparisler.length > 0) {
+        let siparisHTML = '<h6 class="mb-3">Bekleyen Siparişler</h6>';
+        
+        masa.siparisler.forEach(siparis => {
+            siparisHTML += `
+                <div class="card shadow-sm mb-3">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <span class="badge bg-primary">${siparis.get_durum_display || siparis.durum}</span>
+                            <small class="text-muted">${siparis.olusturma_tarihi} önce</small>
+                        </div>
+                        ${siparis.siparis_urunleri.map(urun => `
+                            <div class="d-flex justify-content-between align-items-center py-2 border-bottom">
+                                <div>
+                                    <h6 class="mb-0">${urun.urun.isim}</h6>
+                                    <small class="text-muted">${urun.adet} adet</small>
+                                </div>
+                                <div class="text-end">
+                                    <h6 class="mb-0">₺${urun.toplam_fiyat}</h6>
+                                    <small class="text-muted">₺${urun.birim_fiyat} x ${urun.adet}</small>
+                                </div>
+                            </div>
+                        `).join('')}
+                        <div class="d-flex justify-content-between align-items-center mt-3">
+                            <h6 class="mb-0">Sipariş Toplamı</h6>
+                            <h5 class="mb-0">₺${siparis.toplam_tutar}</h5>
+                        </div>
+                    </div>
+                </div>
+            `;
+        });
+
+        siparisHTML += `
+            <div class="alert alert-info mt-4">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h6 class="mb-0">Toplam Ödenecek</h6>
+                        <small>${masa.siparisler.length} sipariş</small>
+                    </div>
+                    <h4 class="mb-0">₺${masa.toplam_tutar}</h4>
+                </div>
+            </div>
+        `;
+
+        if (masa.toplam_tutar > 0) {
+            siparisHTML += `
+                <button type="button" class="btn btn-success w-100 odeme-al-btn" 
+                        data-masa-no="${masa.no}"
+                        data-siparis-ids="${masa.siparisler.map(s => s.id).join(',')}">
+                    <i class="fas fa-cash-register me-2"></i>
+                    Ödeme Al (₺${masa.toplam_tutar})
+                </button>
+            `;
+        }
+
+        siparislerAlani.innerHTML = siparisHTML;
+    } else {
+        siparislerAlani.innerHTML = `
+            <div class="text-center py-4">
+                <i class="fas fa-receipt fa-3x text-muted mb-3"></i>
+                <p class="text-muted mb-0">Bekleyen sipariş bulunmuyor</p>
+            </div>
+        `;
+    }
+
+    detayPanel.innerHTML = '';
+    detayPanel.appendChild(detayIcerik);
+
+    // Ödeme butonunu aktifleştir
+    const odemeBtn = detayPanel.querySelector('.odeme-al-btn');
+    if (odemeBtn) {
+        odemeBtn.addEventListener('click', function() {
+            const masaNo = this.dataset.masaNo;
+            const siparisIds = this.dataset.siparisIds.split(',');
+            
+            if (confirm('Ödeme almak istediğinize emin misiniz?')) {
+                fetch('{% url "odeme_yap" %}', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded',
+                        'X-CSRFToken': '{{ csrf_token }}'
+                    },
+                    body: `siparis_ids[]=${siparisIds}`
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        window.location.reload();
+                    } else {
+                        alert(data.error || 'Ödeme alınırken bir hata oluştu.');
+                    }
+                });
+            }
+        });
+    }
+}
+</script>
+{% endblock %} 

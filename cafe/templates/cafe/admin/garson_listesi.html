@@ -1,0 +1,84 @@
+{% extends 'cafe/base.html' %}
+
+{% block content %}
+{% include 'cafe/admin/header.html' %}
+
+<div class="container fade-in">
+    <div class="row mb-4">
+        <div class="col">
+            <div class="d-sm-flex align-items-center justify-content-between">
+                <div>
+                    <h1 class="display-6 fw-bold mb-2">Garson Yönetimi</h1>
+                    <p class="text-muted">Toplam {{ garsonlar.count }} garson</p>
+                </div>
+                <a href="{% url 'garson_ekle' %}" class="btn btn-success">
+                    <i class="fas fa-plus me-2"></i>Yeni Garson Ekle
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col">
+            <div class="card glass-card">
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle mb-0">
+                            <thead>
+                                <tr>
+                                    <th class="border-0 rounded-start">
+                                        <i class="fas fa-user me-2"></i>Kullanıcı Adı
+                                    </th>
+                                    <th class="border-0">
+                                        <i class="fas fa-envelope me-2"></i>Email
+                                    </th>
+                                    <th class="border-0">
+                                        <i class="fas fa-calendar me-2"></i>Katılma Tarihi
+                                    </th>
+                                    <th class="border-0 rounded-end text-end">İşlemler</th>
+                                </tr>
+                            </thead>
+                            <tbody class="border-0">
+                                {% for garson in garsonlar %}
+                                <tr class="slide-up" style="animation-delay: {{ forloop.counter|add:-1 }}00ms">
+                                    <td>
+                                        <div class="d-flex align-items-center">
+                                            <div class="user-icon me-3">
+                                                <i class="fas fa-user-tie"></i>
+                                            </div>
+                                            {{ garson.user.username }}
+                                        </div>
+                                    </td>
+                                    <td>{{ garson.user.email }}</td>
+                                    <td>{{ garson.user.date_joined|date:"d.m.Y" }}</td>
+                                    <td class="text-end">
+                                        <div class="btn-group">
+                                            <a href="{% url 'garson_duzenle' garson.id %}" class="btn btn-sm btn-outline-success">
+                                                <i class="fas fa-edit"></i>
+                                            </a>
+                                            <a href="{% url 'garson_sil' garson.id %}" class="btn btn-sm btn-outline-danger" onclick="return confirm('Garsonu silmek istediğinize emin misiniz?')">
+                                                <i class="fas fa-trash"></i>
+                                            </a>
+                                        </div>
+                                    </td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="4" class="text-center py-5">
+                                        <div class="text-muted">
+                                            <i class="fas fa-user-slash fa-3x mb-3"></i>
+                                            <h5>Henüz garson bulunmuyor</h5>
+                                            <p class="mb-0">Yeni garson ekleyerek başlayın</p>
+                                        </div>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 

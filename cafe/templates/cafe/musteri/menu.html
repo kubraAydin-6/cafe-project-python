@@ -1,0 +1,319 @@
+{% extends 'cafe/base.html' %}
+
+{% block extra_css %}
+<style>
+.nav-kategori {
+    border-bottom: 2px solid var(--primary-light);
+    margin-bottom: 2rem;
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+}
+
+.nav-kategori::-webkit-scrollbar {
+    display: none;
+}
+
+.nav-kategori .nav-link {
+    white-space: nowrap;
+    padding: 1rem 1.5rem;
+    color: var(--gray);
+    border-bottom: 3px solid transparent;
+    transition: all 0.3s ease;
+    font-weight: 500;
+}
+
+.nav-kategori .nav-link.active {
+    color: var(--primary);
+    border-bottom-color: var(--primary);
+    background: transparent;
+}
+
+.nav-kategori .nav-link:hover {
+    color: var(--primary);
+}
+
+.urun-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 1.5rem;
+}
+
+.urun-card {
+    border-radius: 16px;
+    overflow: hidden;
+    transition: all 0.3s ease;
+    height: 100%;
+}
+
+.urun-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+}
+
+.urun-resim {
+    height: 180px;
+    object-fit: cover;
+    background: var(--light);
+}
+
+.urun-detay {
+    padding: 1rem;
+}
+
+.urun-fiyat {
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: var(--primary);
+}
+
+.tab-pane {
+    display: none;
+}
+
+.tab-pane.active {
+    display: block;
+    animation: fadeIn 0.5s ease-in;
+}
+
+.menu-header {
+    position: sticky;
+    top: 0;
+    background: rgba(255,255,255,0.95);
+    backdrop-filter: blur(10px);
+    z-index: 1000;
+    padding: 1rem 0;
+    margin-bottom: 2rem;
+}
+
+.sepet-btn {
+    position: fixed;
+    bottom: 2rem;
+    right: 2rem;
+    z-index: 1000;
+    padding: 1rem 2rem;
+    border-radius: 50px;
+    box-shadow: 0 5px 20px rgba(0,0,0,0.15);
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="menu-header">
+    <div class="container">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <div class="d-flex align-items-center">
+                <div class="bg-success text-white rounded-circle d-flex align-items-center justify-content-center me-3" style="width: 48px; height: 48px;">
+                    <i class="fas fa-chair fa-lg"></i>
+                </div>
+                <div>
+                    <h1 class="h3 mb-0">Masa {{ masa_no }}</h1>
+                    <p class="text-muted mb-0"><i class="fas fa-utensils me-2"></i>Menü</p>
+                </div>
+            </div>
+            <div class="d-flex gap-2">
+                <a href="{% url 'sepet' %}" class="btn btn-success">
+                    <i class="fas fa-shopping-cart me-2"></i>Sepet ({{ sepet_urun_sayisi }})
+                </a>
+                <a href="{% url 'odemeler' %}" class="btn btn-outline-success">
+                    <i class="fas fa-receipt me-2"></i>Ödemeler ({{ bekleyen_siparis_sayisi }})
+                </a>
+                {% if not bekleyen_siparis_sayisi and not sepet_urun_sayisi %}
+                <button class="btn btn-outline-danger masa-kapat-btn">
+                    <i class="fas fa-door-open me-2"></i>Masayı Kapat
+                </button>
+                {% endif %}
+            </div>
+        </div>
+
+        <ul class="nav nav-kategori" id="menuTab" role="tablist">
+            {% for kategori in kategoriler %}
+            <li class="nav-item" role="presentation">
+                <button class="nav-link {% if forloop.first %}active{% endif %}" 
+                        id="kategori-{{ kategori.id }}-tab" 
+                        data-bs-toggle="tab" 
+                        data-bs-target="#kategori-{{ kategori.id }}" 
+                        type="button" role="tab">
+                    {{ kategori.isim }}
+                </button>
+            </li>
+            {% endfor %}
+        </ul>
+    </div>
+</div>
+
+<div class="container mb-5">
+    <div class="tab-content">
+        {% for kategori in kategoriler %}
+        <div class="tab-pane fade {% if forloop.first %}show active{% endif %}" 
+             id="kategori-{{ kategori.id }}" 
+             role="tabpanel">
+            <div class="urun-grid">
+                {% for urun in kategori.urunler.all %}
+                <div class="urun-card card">
+                    {% if urun.resim %}
+                    <img src="{{ urun.resim.url }}" class="urun-resim" alt="{{ urun.isim }}">
+                    {% else %}
+                    <div class="urun-resim d-flex align-items-center justify-content-center">
+                        <i class="fas fa-image text-muted fa-3x"></i>
+                    </div>
+                    {% endif %}
+                    <div class="urun-detay">
+                        <h5 class="card-title mb-2">{{ urun.isim }}</h5>
+                        <p class="text-muted small mb-3">{{ urun.aciklama }}</p>
+                        <div class="d-flex justify-content-between align-items-center">
+                            <span class="urun-fiyat">{{ urun.fiyat }} ₺</span>
+                            <div class="d-flex align-items-center gap-2">
+                                <div class="input-group input-group-sm" style="width: 100px;">
+                                    <button class="btn btn-outline-success miktar-azalt" type="button">
+                                        <i class="fas fa-minus"></i>
+                                    </button>
+                                    <input type="text" class="form-control text-center miktar-input" value="1" readonly style="pointer-events: none; background-color: transparent;">
+                                    <button class="btn btn-outline-success miktar-artir" type="button">
+                                        <i class="fas fa-plus"></i>
+                                    </button>
+                                </div>
+                                <button class="btn btn-sm btn-success sepete-ekle-btn" data-urun-id="{{ urun.id }}">
+                                    <i class="fas fa-cart-plus"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+
+<a href="{% url 'sepet' %}" class="btn btn-success btn-lg sepet-btn">
+    <i class="fas fa-shopping-cart me-2"></i>Sepetim
+    {% if sepet_urun_sayisi > 0 %}
+    <span class="badge bg-white text-success ms-2">{{ sepet_urun_sayisi }}</span>
+    {% endif %}
+</a>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Tab işleyicisi
+    var triggerTabList = [].slice.call(document.querySelectorAll('#menuTab button'))
+    triggerTabList.forEach(function(triggerEl) {
+        var tabTrigger = new bootstrap.Tab(triggerEl)
+        triggerEl.addEventListener('click', function(event) {
+            event.preventDefault()
+            tabTrigger.show()
+        })
+    })
+
+    // Miktar artırma/azaltma işleyicileri
+    document.querySelectorAll('.miktar-artir').forEach(btn => {
+        btn.addEventListener('click', function() {
+            const input = this.parentElement.querySelector('.miktar-input');
+            const value = parseInt(input.value);
+            if (value < 99) input.value = value + 1;
+        });
+    });
+
+    document.querySelectorAll('.miktar-azalt').forEach(btn => {
+        btn.addEventListener('click', function() {
+            const input = this.parentElement.querySelector('.miktar-input');
+            const value = parseInt(input.value);
+            if (value > 1) input.value = value - 1;
+        });
+    });
+
+    // Miktar inputu için doğrudan değer girişi kontrolü
+    document.querySelectorAll('.miktar-input').forEach(input => {
+        input.addEventListener('change', function() {
+            let value = parseInt(this.value) || 1;
+            value = Math.max(1, Math.min(99, value));
+            this.value = value;
+        });
+    });
+
+    // Sepete ekle butonları için event listener
+    document.querySelectorAll('.sepete-ekle-btn').forEach(button => {
+        button.addEventListener('click', function() {
+            const urunId = this.dataset.urunId;
+            const miktarInput = this.parentElement.querySelector('.miktar-input');
+            const miktar = parseInt(miktarInput.value);
+            sepeteEkle(urunId, miktar);
+        });
+    });
+
+    // Masa kapatma butonu işleyicisi
+    const masaKapatBtn = document.querySelector('.masa-kapat-btn');
+    if (masaKapatBtn) {
+        masaKapatBtn.addEventListener('click', function() {
+            if (confirm('Masayı kapatmak istediğinize emin misiniz?')) {
+                fetch('{% url "masa_kapat" %}', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded',
+                        'X-CSRFToken': '{{ csrf_token }}'
+                    }
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success && data.redirect) {
+                        window.location.href = data.redirect_url;
+                    } else {
+                        alert(data.error || 'Masa kapatılamadı.');
+                    }
+                })
+                .catch(error => {
+                    console.error('Hata:', error);
+                    alert('Bir hata oluştu. Lütfen tekrar deneyin.');
+                });
+            }
+        });
+    }
+});
+
+function sepeteEkle(urunId, miktar) {
+    fetch('{% url "sepete_ekle" %}', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+            'X-CSRFToken': '{{ csrf_token }}'
+        },
+        body: `urun_id=${urunId}&miktar=${miktar}`
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            // Başarılı ekleme animasyonu
+            const toast = document.createElement('div');
+            toast.className = 'position-fixed bottom-0 end-0 p-3';
+            toast.style.zIndex = '9999';
+            toast.innerHTML = `
+                <div class="toast align-items-center text-white bg-success border-0" role="alert">
+                    <div class="d-flex">
+                        <div class="toast-body">
+                            <i class="fas fa-check-circle me-2"></i>Ürün sepete eklendi
+                        </div>
+                        <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+                    </div>
+                </div>
+            `;
+            document.body.appendChild(toast);
+            const bsToast = new bootstrap.Toast(toast.querySelector('.toast'));
+            bsToast.show();
+            
+            // Sepet sayısını güncelle
+            setTimeout(() => location.reload(), 1000);
+        }
+    });
+}
+</script>
+{% endblock %} 

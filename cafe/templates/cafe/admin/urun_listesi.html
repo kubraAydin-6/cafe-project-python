@@ -1,0 +1,102 @@
+{% extends 'cafe/base.html' %}
+{% load static %}
+
+{% block content %}
+{% include 'cafe/admin/header.html' %}
+
+<div class="container">
+    <div class="row mb-4">
+        <div class="col">
+            <div class="d-sm-flex align-items-center justify-content-between">
+                <div>
+                    <h1 class="h3 mb-0">Ürün Yönetimi</h1>
+                    <p class="text-muted">Toplam {{ urunler.count }} ürün</p>
+                </div>
+                <a href="{% url 'urun_ekle' %}" class="btn btn-success">
+                    <i class="fas fa-plus me-2"></i>Yeni Ürün Ekle
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <div class="row g-3">
+        {% for urun in urunler %}
+        <div class="col-sm-6 col-lg-3">
+            <div class="card h-100 border-0 shadow-sm">
+                <div class="card-header bg-white border-0 pt-3">
+                    <div class="position-relative" style="max-width: 150px; margin: 0 auto;">
+                        {% if urun.resim %}
+                        <div class="ratio ratio-1x1">
+                            <img src="{{ urun.resim.url }}" class="card-img-top rounded" alt="{{ urun.isim }}" style="object-fit: cover;">
+                        </div>
+                        {% else %}
+                        <div class="bg-light text-center rounded py-4">
+                            <i class="fas fa-utensils fa-2x text-muted"></i>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+                <div class="card-body pt-2 pb-3">
+                    <div class="d-flex justify-content-between align-items-start mb-1">
+                        <h6 class="card-title mb-0">{{ urun.isim }}</h6>
+                        <span class="badge bg-success">{{ urun.fiyat }} ₺</span>
+                    </div>
+                    <p class="card-text text-muted small mb-2" style="font-size: 0.8rem;">{{ urun.aciklama|truncatechars:50 }}</p>
+                    <div class="d-flex justify-content-between align-items-center">
+                        <span class="badge bg-primary" style="font-size: 0.7rem;">
+                            <i class="fas fa-folder me-1"></i>{{ urun.kategori.isim }}
+                        </span>
+                        <div class="btn-group btn-group-sm">
+                            <a href="{% url 'urun_duzenle' urun.id %}" class="btn btn-sm btn-outline-primary">
+                                <i class="fas fa-edit"></i>
+                            </a>
+                            <button class="btn btn-sm btn-outline-danger">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-footer bg-transparent py-2">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <small class="text-muted" style="font-size: 0.75rem;">
+                            <i class="fas fa-circle {% if urun.stokta %}text-success{% else %}text-danger{% endif %} me-1"></i>
+                            {{ urun.stokta|yesno:"Stokta,Tükendi" }}
+                        </small>
+                        <div class="form-check form-switch">
+                            <input class="form-check-input" type="checkbox" {% if urun.stokta %}checked{% endif %} style="transform: scale(0.8);">
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% empty %}
+        <div class="col-12">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body text-center py-5">
+                    <i class="fas fa-box-open fa-3x text-muted mb-3"></i>
+                    <h5 class="text-muted">Henüz ürün eklenmemiş</h5>
+                    <p class="text-muted mb-0">Yeni ürün eklemek için yukarıdaki butonu kullanın</p>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+
+{% block extra_css %}
+<style>
+.card {
+    transition: transform 0.2s ease-in-out;
+}
+.card:hover {
+    transform: translateY(-5px);
+}
+.btn-group .btn {
+    padding: 0.25rem 0.5rem;
+}
+.badge {
+    padding: 0.5rem 0.75rem;
+}
+</style>
+{% endblock %}
+{% endblock %} 

@@ -1,0 +1,183 @@
+{% extends 'cafe/base.html' %}
+
+{% block extra_css %}
+<style>
+.card {
+    margin-top: 5vh;
+}
+.display-1 {
+    font-size: 5rem;
+}
+.btn-group .btn {
+    padding: 1rem;
+}
+.form-control {
+    padding: 0.8rem 1rem;
+    font-size: 1rem;
+}
+.btn-lg {
+    padding: 1rem;
+    font-size: 1.1rem;
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center align-items-center min-vh-100">
+    <div class="col-md-6">
+        <div class="card glass-card fade-in">
+            <div class="card-body p-5">
+                <div class="text-center mb-5">
+                    <div class="display-1 mb-4 text-success">
+                        <i class="fas fa-coffee"></i>
+                    </div>
+                    <h2 class="mb-2 fw-bold">Cafe Sistemine Hoş Geldiniz</h2>
+                    <p class="text-muted">Lütfen giriş tipinizi seçin</p>
+                </div>
+
+                <div class="mb-5">
+                    <div class="btn-group w-100 p-2 bg-light rounded-4" role="group">
+                        <button type="button" class="btn btn-outline-success active rounded-3" id="musteriBtn">
+                            <i class="fas fa-user me-2"></i>Müşteri
+                        </button>
+                        <button type="button" class="btn btn-outline-success rounded-3" id="garsonBtn">
+                            <i class="fas fa-user-tie me-2"></i>Garson
+                        </button>
+                        <button type="button" class="btn btn-outline-success rounded-3" id="adminBtn">
+                            <i class="fas fa-user-shield me-2"></i>Yönetici
+                        </button>
+                    </div>
+                </div>
+
+                <div id="musteriForm" class="slide-up">
+                    <div class="card border-0 shadow-sm">
+                        <div class="card-body p-4">
+                            <h5 class="card-title mb-4">Müşteri Girişi</h5>
+                            {% if messages %}
+                            {% for message in messages %}
+                            <div class="alert alert-danger mb-3">
+                                {{ message }}
+                            </div>
+                            {% endfor %}
+                            {% endif %}
+                            <form method="post">
+                                {% csrf_token %}
+                                <div class="mb-3">
+                                    <label for="isim" class="form-label">İsim</label>
+                                    <input type="text" class="form-control" id="isim" name="isim" required>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="masa_no" class="form-label">Masa Numarası</label>
+                                    <input type="number" class="form-control" id="masa_no" name="masa_no" min="1" max="20" required>
+                                    <div class="form-text text-muted">1-20 arası bir masa numarası girin</div>
+                                </div>
+                                <div class="d-grid">
+                                    <button type="submit" class="btn btn-success">
+                                        <i class="fas fa-sign-in-alt me-2"></i>Giriş Yap
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="garsonForm" style="display: none;" class="slide-up">
+                    <div class="card border-0 shadow-sm">
+                        <div class="card-body p-4">
+                            <h5 class="card-title mb-4">Garson Girişi</h5>
+                            {% if messages %}
+                            {% for message in messages %}
+                            <div class="alert alert-danger mb-3">
+                                {{ message }}
+                            </div>
+                            {% endfor %}
+                            {% endif %}
+                            <form method="post">
+                                {% csrf_token %}
+                                <div class="mb-3">
+                                    <label class="form-label">Kullanıcı Adı</label>
+                                    <input type="text" name="username" class="form-control" required>
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label">Şifre</label>
+                                    <input type="password" name="password" class="form-control" required>
+                                </div>
+                                <div class="d-grid">
+                                    <button type="submit" class="btn btn-success">
+                                        <i class="fas fa-sign-in-alt me-2"></i>Giriş Yap
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="adminForm" style="display: none;" class="slide-up">
+                    <div class="card border-0 shadow-sm">
+                        <div class="card-body p-4">
+                            <h5 class="card-title mb-4">Yönetici Girişi</h5>
+                            {% if messages %}
+                            {% for message in messages %}
+                            <div class="alert alert-danger mb-3">
+                                {{ message }}
+                            </div>
+                            {% endfor %}
+                            {% endif %}
+                            <form method="post">
+                                {% csrf_token %}
+                                <div class="mb-3">
+                                    <label class="form-label">Kullanıcı Adı</label>
+                                    <input type="text" name="username" class="form-control" required>
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label">Şifre</label>
+                                    <input type="password" name="password" class="form-control" required>
+                                </div>
+                                <div class="d-grid">
+                                    <button type="submit" class="btn btn-success">
+                                        <i class="fas fa-sign-in-alt me-2"></i>Giriş Yap
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const musteriBtn = document.getElementById('musteriBtn');
+    const garsonBtn = document.getElementById('garsonBtn');
+    const adminBtn = document.getElementById('adminBtn');
+    const musteriForm = document.getElementById('musteriForm');
+    const garsonForm = document.getElementById('garsonForm');
+    const adminForm = document.getElementById('adminForm');
+
+    function hideAllForms() {
+        [musteriForm, garsonForm, adminForm].forEach(form => {
+            form.style.display = 'none';
+            form.classList.remove('slide-up');
+        });
+        [musteriBtn, garsonBtn, adminBtn].forEach(btn => {
+            btn.classList.remove('active');
+        });
+    }
+
+    function showForm(form, btn) {
+        hideAllForms();
+        form.style.display = 'block';
+        form.classList.add('slide-up');
+        btn.classList.add('active');
+    }
+
+    musteriBtn.addEventListener('click', () => showForm(musteriForm, musteriBtn));
+    garsonBtn.addEventListener('click', () => showForm(garsonForm, garsonBtn));
+    adminBtn.addEventListener('click', () => showForm(adminForm, adminBtn));
+});
+</script>
+{% endblock %}

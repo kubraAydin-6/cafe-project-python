@@ -1,0 +1,61 @@
+{% extends 'cafe/base.html' %}
+
+{% block content %}
+{% include 'cafe/admin/header.html' %}
+
+<div class="container">
+    <div class="row mb-4">
+        <div class="col">
+            <div class="d-sm-flex align-items-center justify-content-between">
+                <h1 class="h3 mb-0">
+                    <i class="fas fa-plus me-2"></i>Yeni Kategori
+                </h1>
+            </div>
+        </div>
+    </div>
+
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body">
+                    <form method="post">
+                        {% csrf_token %}
+                        <div class="mb-3">
+                            <label for="isim" class="form-label">Kategori Adı</label>
+                            <input type="text" class="form-control" id="isim" name="isim" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="sira" class="form-label">Sıra Numarası</label>
+                            <input type="number" class="form-control" id="sira" name="sira" min="1" required>
+                            <div class="form-text">Kategorinin menüdeki görünme sırası</div>
+                        </div>
+                        <div class="d-grid gap-2">
+                            <button type="submit" class="btn btn-success">
+                                <i class="fas fa-save me-2"></i>Kaydet
+                            </button>
+                            <a href="{% url 'kategori_listesi' %}" class="btn btn-outline-success">
+                                <i class="fas fa-arrow-left me-2"></i>Geri Dön
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% block extra_css %}
+<style>
+.card {
+    transition: transform 0.2s ease-in-out;
+}
+.card:hover {
+    transform: translateY(-5px);
+}
+.form-control:focus {
+    border-color: #8a2be2;
+    box-shadow: 0 0 0 0.2rem rgba(138, 43, 226, 0.25);
+}
+</style>
+{% endblock %}
+{% endblock %} 

@@ -1,0 +1,120 @@
+{% extends 'cafe/base.html' %}
+
+{% block content %}
+{% include 'cafe/admin/header.html' %}
+
+<div class="container">
+    <div class="row mb-4">
+        <div class="col">
+            <div class="d-sm-flex align-items-center justify-content-between">
+                <div>
+                    <h1 class="h3 mb-0">Sipariş Takibi</h1>
+                    <p class="text-muted">Toplam {{ siparisler.count }} sipariş</p>
+                </div>
+                <div class="btn-group">
+                    <a href="{% url 'siparisler' %}" class="btn btn-outline-success {% if not secili_durum %}active{% endif %}">
+                        <i class="fas fa-list me-1"></i>Tümü
+                    </a>
+                    <a href="{% url 'siparisler' %}?durum=beklemede" class="btn btn-outline-success {% if secili_durum == 'beklemede' %}active{% endif %}">
+                        <i class="fas fa-clock me-1"></i>Bekleyenler
+                    </a>
+                    <a href="{% url 'siparisler' %}?durum=hazirlaniyor" class="btn btn-outline-success {% if secili_durum == 'hazirlaniyor' %}active{% endif %}">
+                        <i class="fas fa-spinner me-1"></i>Hazırlananlar
+                    </a>
+                    <a href="{% url 'siparisler' %}?durum=tamamlandi" class="btn btn-outline-success {% if secili_durum == 'tamamlandi' %}active{% endif %}">
+                        <i class="fas fa-check me-1"></i>Tamamlananlar
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row g-4">
+        {% for siparis in siparisler %}
+        <div class="col-md-6 col-xl-4">
+            <div class="card h-100 border-0 shadow-sm">
+                <div class="card-header bg-transparent">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="mb-0">Masa {{ siparis.masa_no }}</h6>
+                            <small class="text-muted">{{ siparis.olusturma_tarihi|date:"d.m.Y H:i" }}</small>
+                        </div>
+                        <span class="badge {% if siparis.durum == 'beklemede' %}bg-warning{% elif siparis.durum == 'hazirlaniyor' %}bg-info{% elif siparis.durum == 'tamamlandi' %}bg-success{% else %}bg-danger{% endif %}">
+                            {{ siparis.get_durum_display }}
+                        </span>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <h6 class="text-muted mb-2">Sipariş İçeriği</h6>
+                        <ul class="list-group list-group-flush">
+                            {% for item in siparis.siparis_urunleri.all %}
+                            <li class="list-group-item px-0 d-flex justify-content-between align-items-center">
+                                <div>
+                                    <span class="me-2">{{ item.urun.isim }}</span>
+                                    <small class="text-muted">x{{ item.adet }}</small>
+                                </div>
+                                <span class="text-success">{{ item.toplam_fiyat }} ₺</span>
+                            </li>
+                            {% endfor %}
+                        </ul>
+                    </div>
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <small class="text-muted d-block">Sipariş Zamanı</small>
+                            <strong>{{ siparis.olusturma_tarihi|date:"H:i" }}</strong>
+                        </div>
+                        <div class="text-end">
+                            <small class="text-muted d-block">Toplam Tutar</small>
+                            <strong class="text-success">{{ siparis.toplam_tutar }} ₺</strong>
+                        </div>
+                    </div>
+                    <div class="mt-3">
+                        <form method="post" action="{% url 'siparis_durumu_guncelle' siparis.id %}" class="d-flex gap-2">
+                            {% csrf_token %}
+                            <select name="durum" class="form-select form-select-sm">
+                                <option value="beklemede" {% if siparis.durum == 'beklemede' %}selected{% endif %}>Beklemede</option>
+                                <option value="hazirlaniyor" {% if siparis.durum == 'hazirlaniyor' %}selected{% endif %}>Hazırlanıyor</option>
+                                <option value="tamamlandi" {% if siparis.durum == 'tamamlandi' %}selected{% endif %}>Tamamlandı</option>
+                                <option value="iptal" {% if siparis.durum == 'iptal' %}selected{% endif %}>İptal</option>
+                            </select>
+                            <button type="submit" class="btn btn-sm btn-success">
+                                <i class="fas fa-save"></i>
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% empty %}
+        <div class="col-12">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body text-center py-5">
+                    <i class="fas fa-clipboard-list fa-3x text-muted mb-3"></i>
+                    <h5 class="text-muted">Henüz sipariş yok</h5>
+                    <p class="text-muted mb-0">Aktif siparişler burada görüntülenecek</p>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+
+{% block extra_css %}
+<style>
+.card {
+    transition: transform 0.2s ease-in-out;
+}
+.card:hover {
+    transform: translateY(-5px);
+}
+.list-group-item {
+    border-left: none;
+    border-right: none;
+}
+.badge {
+    padding: 0.5rem 0.75rem;
+}
+</style>
+{% endblock %}
+{% endblock %} 

@@ -1,0 +1,33 @@
+from django.urls import path
+from . import views
+
+urlpatterns = [
+    path('', views.giris_secim, name='giris_secim'),
+    path('menu/', views.menu, name='menu'),
+    path('sepet/', views.sepet, name='sepet'),
+    path('sepete-ekle/', views.sepete_ekle, name='sepete_ekle'),
+    path('sepet/urun-artir/', views.sepet_urun_artir, name='sepet_urun_artir'),
+    path('sepet/urun-azalt/', views.sepet_urun_azalt, name='sepet_urun_azalt'),
+    path('sepet/urun-kaldir/', views.sepet_urun_kaldir, name='sepet_urun_kaldir'),
+    path('sepet/bosalt/', views.sepet_bosalt, name='sepet_bosalt'),
+    path('garson-cagir/', views.garson_cagir, name='garson_cagir'),
+    path('garson/', views.garson_panel, name='garson_panel'),
+    path('garson/cikis/', views.garson_cikis, name='garson_cikis'),
+    path('yonetim/', views.admin_panel, name='admin_panel'),
+    path('yonetim/kategoriler/', views.kategori_listesi, name='kategori_listesi'),
+    path('yonetim/kategori-ekle/', views.kategori_ekle, name='kategori_ekle'),
+    path('yonetim/kategori-duzenle/<int:kategori_id>/', views.kategori_duzenle, name='kategori_duzenle'),
+    path('yonetim/urunler/', views.urun_listesi, name='urun_listesi'),
+    path('yonetim/urun-ekle/', views.urun_ekle, name='urun_ekle'),
+    path('yonetim/urun-duzenle/<int:urun_id>/', views.urun_duzenle, name='urun_duzenle'),
+    path('yonetim/siparisler/', views.siparisler, name='siparisler'),
+    path('yonetim/siparis-durumu/<int:siparis_id>/', views.siparis_durumu_guncelle, name='siparis_durumu_guncelle'),
+    path('yonetim/garsonlar/', views.garson_listesi, name='garson_listesi'),
+    path('yonetim/garson-ekle/', views.garson_ekle, name='garson_ekle'),
+    path('yonetim/garson-duzenle/<int:garson_id>/', views.garson_duzenle, name='garson_duzenle'),
+    path('yonetim/garson-sil/<int:garson_id>/', views.garson_sil, name='garson_sil'),
+    path('siparis/onayla/', views.siparis_onayla, name='siparis_onayla'),
+    path('odemeler/', views.odemeler, name='odemeler'),
+    path('odeme/yap/', views.odeme_yap, name='odeme_yap'),
+    path('masa/kapat/', views.masa_kapat, name='masa_kapat'),
+] 

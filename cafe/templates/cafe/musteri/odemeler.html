@@ -1,0 +1,232 @@
+{% extends 'cafe/base.html' %}
+
+{% block extra_css %}
+<style>
+.odeme-header {
+    position: sticky;
+    top: 0;
+    background: rgba(255,255,255,0.95);
+    backdrop-filter: blur(10px);
+    z-index: 1000;
+    padding: 1rem 0;
+    margin-bottom: 2rem;
+}
+
+.siparis-card {
+    border: none;
+    border-radius: 16px;
+    transition: all 0.3s ease;
+    margin-bottom: 1rem;
+}
+
+.siparis-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+}
+
+.odeme-ozet {
+    position: sticky;
+    top: 6rem;
+    border-radius: 16px;
+    background: white;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+}
+
+@media (max-width: 768px) {
+    .odeme-ozet {
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        top: auto;
+        border-radius: 16px 16px 0 0;
+        padding: 1rem;
+        z-index: 1000;
+    }
+    
+    .container {
+        padding-bottom: 200px;
+    }
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="odeme-header">
+    <div class="container">
+        <div class="d-flex justify-content-between align-items-center">
+            <div class="d-flex align-items-center">
+                <div class="bg-success text-white rounded-circle d-flex align-items-center justify-content-center me-3" style="width: 48px; height: 48px;">
+                    <i class="fas fa-chair fa-lg"></i>
+                </div>
+                <div>
+                    <h1 class="h3 mb-0">Masa {{ request.session.masa_no }}</h1>
+                    <p class="text-muted mb-0">
+                        <i class="fas fa-receipt me-2"></i>Bekleyen Ödemeler ({{ bekleyen_siparis_sayisi }})
+                    </p>
+                </div>
+            </div>
+            <a href="{% url 'menu' %}" class="btn btn-outline-success">
+                <i class="fas fa-arrow-left me-2"></i>Menüye Dön
+            </a>
+        </div>
+    </div>
+</div>
+
+<div class="container">
+    {% csrf_token %}
+    <div class="row g-4">
+        <div class="col-lg-8">
+            {% if siparisler %}
+                {% for siparis in siparisler %}
+                <div class="siparis-card card">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-start mb-3">
+                            <div>
+                                <h5 class="card-title mb-1">Sipariş #{{ siparis.id }}</h5>
+                                <p class="text-muted small mb-0">{{ siparis.olusturma_tarihi|date:"d.m.Y H:i" }}</p>
+                            </div>
+                            <span class="badge {% if siparis.durum == 'beklemede' %}bg-warning{% elif siparis.durum == 'hazirlaniyor' %}bg-info{% elif siparis.durum == 'tamamlandi' %}bg-success{% else %}bg-danger{% endif %}">
+                                {{ siparis.get_durum_display }}
+                            </span>
+                        </div>
+                        
+                        <div class="table-responsive">
+                            <table class="table table-sm">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>Ürün</th>
+                                        <th class="text-center">Adet</th>
+                                        <th class="text-end">Fiyat</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for siparis_urun in siparis.siparis_urunleri.all %}
+                                    <tr>
+                                        <td>
+                                            <div class="d-flex align-items-center">
+                                                {% if siparis_urun.urun.resim %}
+                                                <img src="{{ siparis_urun.urun.resim.url }}" alt="{{ siparis_urun.urun.isim }}" class="me-2" style="width: 40px; height: 40px; object-fit: cover; border-radius: 8px;">
+                                                {% else %}
+                                                <div class="me-2" style="width: 40px; height: 40px; background: #f8f9fa; border-radius: 8px; display: flex; align-items: center; justify-content: center;">
+                                                    <i class="fas fa-utensils text-muted"></i>
+                                                </div>
+                                                {% endif %}
+                                                <div>
+                                                    <div class="fw-medium">{{ siparis_urun.urun.isim }}</div>
+                                                    <small class="text-muted">{{ siparis_urun.birim_fiyat }} ₺ x {{ siparis_urun.adet }}</small>
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td class="text-center align-middle">{{ siparis_urun.adet }}</td>
+                                        <td class="text-end align-middle">{{ siparis_urun.toplam_fiyat }} ₺</td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                                <tfoot class="table-light">
+                                    <tr>
+                                        <td colspan="2" class="text-end"><strong>Toplam</strong></td>
+                                        <td class="text-end"><strong>{{ siparis.toplam_tutar }} ₺</strong></td>
+                                    </tr>
+                                </tfoot>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            {% else %}
+                <div class="text-center py-5">
+                    <div class="mb-3">
+                        <i class="fas fa-receipt fa-3x text-muted"></i>
+                    </div>
+                    <h4>Ödeme Bekleyen Sipariş Yok</h4>
+                    <p class="text-muted">Tüm siparişleriniz ödenmiş durumda.</p>
+                </div>
+            {% endif %}
+        </div>
+        
+        <div class="col-lg-4">
+            <div class="odeme-ozet card">
+                <div class="card-body">
+                    <h4 class="card-title mb-4">Ödeme Özeti</h4>
+                    
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <span class="text-muted">Toplam Tutar</span>
+                        <span class="h4 mb-0 text-success">{{ toplam_tutar }} ₺</span>
+                    </div>
+                    
+                    <div class="d-grid gap-2">
+                        <button class="btn btn-success btn-lg odeme-yap-btn">
+                            <i class="fas fa-credit-card me-2"></i>Ödeme Yap
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+{# Template değişkenlerini data attribute'larına yerleştir #}
+<div id="odemelerData" 
+    data-siparis-ids="{% for siparis in siparisler %}{% if siparis.durum == 'tamamlandi' %}{{ siparis.id }}{% if not forloop.last %},{% endif %}{% endif %}{% endfor %}"
+    data-csrf-token="{{ csrf_token }}"
+    data-odeme-url="{% url 'odeme_yap' %}">
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const odemeBtn = document.querySelector('.odeme-yap-btn');
+    const odemelerData = document.getElementById('odemelerData');
+    
+    // Veriyi data attribute'larından al
+    const siparisIdsStr = odemelerData.dataset.siparisIds;
+    const SIPARIS_IDS = siparisIdsStr ? siparisIdsStr.split(',').filter(Boolean).map(Number) : [];
+    const CSRF_TOKEN = odemelerData.dataset.csrfToken;
+    const ODEME_URL = odemelerData.dataset.odemeUrl;
+    
+    // Eğer ödenecek sipariş yoksa butonu devre dışı bırak
+    if (SIPARIS_IDS.length === 0) {
+        odemeBtn.disabled = true;
+        odemeBtn.title = 'Ödenecek tamamlanmış sipariş bulunmuyor';
+    }
+    
+    odemeBtn.addEventListener('click', function() {
+        if (SIPARIS_IDS.length === 0) {
+            alert('Ödenecek tamamlanmış sipariş bulunmuyor.');
+            return;
+        }
+
+        if (!confirm('Tüm siparişler için ödeme yapmak istediğinize emin misiniz?')) {
+            return;
+        }
+
+        fetch(ODEME_URL, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',
+                'X-CSRFToken': CSRF_TOKEN
+            },
+            body: 'siparis_ids[]=' + SIPARIS_IDS.join('&siparis_ids[]=')
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                if (data.redirect) {
+                    window.location.href = data.redirect_url;
+                } else {
+                    location.reload();
+                }
+            } else {
+                alert(data.error || 'Ödeme işlemi başarısız oldu.');
+            }
+        })
+        .catch(error => {
+            console.error('Hata:', error);
+            alert('Bir hata oluştu. Lütfen tekrar deneyin.');
+        });
+    });
+});
+</script>
+{% endblock %} 

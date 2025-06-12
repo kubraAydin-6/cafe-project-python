@@ -1,0 +1,172 @@
+{% load static %}
+
+<nav class="navbar navbar-expand-lg navbar-custom mb-4">
+    <div class="container">
+        <a class="navbar-brand d-flex align-items-center" href="{% url 'admin_panel' %}">
+            <div class="brand-icon me-2">
+                <i class="fas fa-mug-hot"></i>
+            </div>
+            <span class="fw-bold">Cafe Yönetim</span>
+        </a>
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#adminNav">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        
+        <div class="collapse navbar-collapse" id="adminNav">
+            <ul class="navbar-nav me-auto">
+                <li class="nav-item px-1">
+                    <a class="nav-link {% if request.resolver_match.url_name == 'garson_listesi' %}active{% endif %}" 
+                       href="{% url 'garson_listesi' %}">
+                        <i class="fas fa-user-tie me-1"></i>Garsonlar
+                    </a>
+                </li>
+                <li class="nav-item px-1">
+                    <a class="nav-link {% if request.resolver_match.url_name == 'kategori_listesi' %}active{% endif %}" 
+                       href="{% url 'kategori_listesi' %}">
+                        <i class="fas fa-tags me-1"></i>Kategoriler
+                    </a>
+                </li>
+                <li class="nav-item px-1">
+                    <a class="nav-link {% if request.resolver_match.url_name == 'urun_listesi' %}active{% endif %}" 
+                       href="{% url 'urun_listesi' %}">
+                        <i class="fas fa-utensils me-1"></i>Ürünler
+                    </a>
+                </li>
+                <li class="nav-item px-1">
+                    <a class="nav-link {% if request.resolver_match.url_name == 'siparisler' %}active{% endif %}" 
+                       href="{% url 'siparisler' %}">
+                        <i class="fas fa-clipboard-list me-1"></i>Siparişler
+                    </a>
+                </li>
+            </ul>
+            
+            <div class="navbar-nav">
+                <div class="nav-item dropdown">
+                    <a class="nav-link dropdown-toggle d-flex align-items-center" href="#" id="userDropdown" role="button" data-bs-toggle="dropdown">
+                        <div class="user-icon me-2">
+                            <i class="fas fa-user"></i>
+                        </div>
+                        <span>{{ request.user.username }}</span>
+                    </a>
+                    <div class="dropdown-menu dropdown-menu-end">
+                        <a class="dropdown-item" href="{% url 'giris_secim' %}">
+                            <i class="fas fa-sign-out-alt me-2 text-danger"></i>Çıkış
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</nav>
+
+<!-- Bildirimler -->
+<div class="position-fixed bottom-0 end-0 p-3" style="z-index: 11">
+    {% if messages %}
+    {% for message in messages %}
+    <div class="toast show glass-card notification-toast" role="alert">
+        <div class="toast-header border-0">
+            <div class="notification-icon me-2">
+                <i class="fas fa-info-circle"></i>
+            </div>
+            <strong class="me-auto">Bilgi</strong>
+            <button type="button" class="btn-close" data-bs-dismiss="toast"></button>
+        </div>
+        <div class="toast-body">
+            {{ message }}
+        </div>
+    </div>
+    {% endfor %}
+    {% endif %}
+</div>
+
+{% block extra_css %}
+<style>
+.navbar-custom {
+    padding: 1rem 0;
+}
+
+.navbar-custom .nav-link {
+    color: var(--dark);
+    padding: 0.5rem 1rem;
+    border-radius: 8px;
+    transition: all 0.3s ease;
+}
+
+.navbar-custom .nav-link:hover,
+.navbar-custom .nav-link.active {
+    color: var(--primary);
+    background: var(--primary-light);
+}
+
+.navbar-custom .dropdown-menu {
+    border: none;
+    box-shadow: 0 4px 24px rgba(127, 61, 255, 0.1);
+}
+
+.navbar-custom .dropdown-item {
+    padding: 0.7rem 1.5rem;
+    transition: all 0.3s ease;
+}
+
+.navbar-custom .dropdown-item:hover {
+    background: var(--primary-light);
+    color: var(--primary);
+}
+
+.toast {
+    min-width: 300px;
+}
+
+.brand-icon {
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--primary);
+    color: white;
+    border-radius: 10px;
+    font-size: 1.2rem;
+}
+
+.user-icon {
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--primary);
+    color: white;
+    border-radius: 50%;
+    font-size: 1rem;
+}
+
+.notification-toast {
+    animation: slideUp 0.3s ease forwards;
+    margin-bottom: 1rem;
+}
+
+@keyframes slideUp {
+    from {
+        transform: translateY(100%);
+        opacity: 0;
+    }
+    to {
+        transform: translateY(0);
+        opacity: 1;
+    }
+}
+
+.notification-icon {
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--primary);
+    color: white;
+    border-radius: 8px;
+    font-size: 1rem;
+}
+</style>
+{% endblock %} 
